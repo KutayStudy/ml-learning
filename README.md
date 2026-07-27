@@ -13,13 +13,16 @@ The repository focuses on runnable experiments, small exercises, and practical l
 ## Numerical Computing
 
 - **NumPy Fundamentals:** Array creation, data types, indexing, slicing, Boolean masking, fancy indexing, reshaping, flattening, transposition, and vectorized operations.
-- **NumPy Practice:** Completed exercises 1–30 from the [numpy-100](https://github.com/rougier/numpy-100) collection.
+- **Broadcasting and Axis Operations:** Array-array broadcasting, shape alignment, `np.newaxis`, negative axes, multi-axis reductions, and `keepdims`.
+- **NumPy Linear Algebra:** Vector and matrix norms, linear system solving, matrix inversion, eigenvalue decomposition, matrix rank, determinant, and least-squares solutions.
+- **NumPy Practice:** Completed exercises 1–60 from the [numpy-100](https://github.com/rougier/numpy-100) collection.
 
 ## Notebooks
 
 - [`s2_svd_pca.ipynb`](notebooks/s2_svd_pca.ipynb) — SVD, low-rank approximation, and PCA
 - [`S5_NumPy_Examples.ipynb`](notebooks/S5_NumPy_Examples.ipynb) — NumPy fundamentals with runnable examples
-- [`100_Numpy_exercises.ipynb`](notebooks/100_Numpy_exercises.ipynb) — Solutions to numpy-100 exercises 1–30
+- [`S6_NumPy_Broadcasting_Axis_Linalg.ipynb`](notebooks/S6_NumPy_Broadcasting_Axis_Linalg.ipynb) — Broadcasting, axis operations, and NumPy linear algebra
+- [`100_Numpy_exercises.ipynb`](notebooks/100_Numpy_exercises.ipynb) — Solutions to numpy-100 exercises 1-60
 
 ## Repository Structure
 
@@ -28,7 +31,8 @@ ml-learning/
 ├── notebooks/
 │   ├── 100_Numpy_exercises.ipynb
 │   ├── s2_svd_pca.ipynb
-│   └── S5_NumPy_Examples.ipynb
+│   ├── S5_NumPy_Examples.ipynb
+│   └── S6_NumPy_Broadcasting_Axis_Linalg.ipynb
 ├── data/
 ├── pyproject.toml
 ├── uv.lock
