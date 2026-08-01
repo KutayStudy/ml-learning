@@ -24,30 +24,41 @@ The repository focuses on runnable experiments, small exercises, and practical l
 - **Advanced pandas:** Merging and joining (`validate`, `indicator`), string cleaning with regex, datetime handling and resampling, missing-value handling, MultiIndex, and categorical dtype.
 - **Practice:** Targeted subset of exercises from [100-pandas-puzzles](https://github.com/ajcr/100-pandas-puzzles) (not full completion — selected for relevance to real tabular-data work).
 
+## SQL Analytics (DuckDB)
+
+- **SQL over DataFrames:** Querying Pandas DataFrames directly with DuckDB without creating database files.
+- **Aggregation:** Customer-level analysis using `GROUP BY`, `SUM`, and `AVG`.
+- **Window Functions:** Ranking and sequential analysis with `ROW_NUMBER`, `RANK`, `DENSE_RANK`, `LAG`, and `LEAD`.
+- **Window Frames:** Running totals and moving averages with `ROWS BETWEEN`.
+- **Analytical Filtering:** Filtering window-function results with `QUALIFY` and common table expressions.
+- **Relational Operations:** Joining sales and customer data with SQL joins.
+- **Time-Series Aggregation:** Monthly sales analysis using `DATE_TRUNC`, compared with Pandas `resample`.
+
 ## Notebooks
 
 - [`s2_svd_pca.ipynb`](notebooks/s2_svd_pca.ipynb) — SVD, low-rank approximation, and PCA
 - [`S5_NumPy_Examples.ipynb`](notebooks/S5_NumPy_Examples.ipynb) — NumPy fundamentals with runnable examples
 - [`100_Numpy_exercises.ipynb`](notebooks/100_Numpy_exercises.ipynb) — Solutions to numpy-100 exercises 1–60
 - [`S6_NumPy_Broadcasting_Axis_Linalg.ipynb`](notebooks/S6_NumPy_Broadcasting_Axis_Linalg.ipynb) — Broadcasting, axis-based reduction, and linear algebra operations
-- [`s7_pandas_fundamentals.ipynb`](notebooks/s7_pandas_fundamentals.ipynb) — pandas fundamentals with a self-built dataset
+- [`S7_Pandas_Fundamentals_and_Exercises.ipynb`](notebooks/S7_Pandas_Fundamentals_and_Exercises.ipynb) — pandas fundamentals with a self-built dataset
 - [`S8_Pandas_Advanced_and_Exercises.ipynb`](notebooks/S8_Pandas_Advanced_and_Exercises.ipynb) — Merge/join, string cleaning, dates, missing values, MultiIndex, and categorical dtype
-- [`100_pandas_puzzles.ipynb`](notebooks/100_pandas_puzzles.ipynb) — Targeted practice from 100-pandas-puzzles
+- [`100-pandas-puzzles.ipynb`](notebooks/100-pandas-puzzles.ipynb) — Targeted practice from 100-pandas-puzzles
+- [`S9_SQL.ipynb`](notebooks/S9_SQL.ipynb) — DuckDB aggregation, window functions, joins, and monthly sales analysis
 
 ## Repository Structure
 
-```
+```text
 ml-learning/
 ├── notebooks/
 │   ├── 100_Numpy_exercises.ipynb
+│   ├── 100-pandas-puzzles.ipynb
 │   ├── s2_svd_pca.ipynb
 │   ├── S5_NumPy_Examples.ipynb
 │   ├── S6_NumPy_Broadcasting_Axis_Linalg.ipynb
-│   ├── s7_pandas_fundamentals.ipynb
+│   ├── S7_Pandas_Fundamentals_and_Exercises.ipynb
 │   ├── S8_Pandas_Advanced_and_Exercises.ipynb
-│   └── 100_pandas_puzzles.ipynb
+│   └── S9_SQL.ipynb
 ├── data/
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
-```
