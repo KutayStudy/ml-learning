@@ -4,6 +4,10 @@ A lightweight, notebook-first repository for learning the mathematical and pract
 
 The repository focuses on runnable experiments, small exercises, and practical learning artifacts rather than extensive standalone notes.
 
+## Prep Summary
+
+Foundational phase before the 6-month roadmap begins: environment and repo setup, SVD/PCA, MLE and MAP (worked by hand on paper), NumPy (fundamentals through broadcasting and linear algebra), pandas (fundamentals through merging, cleaning, and MultiIndex), and SQL analytics with DuckDB. All exercise and practice notebooks live under `notebooks/prep/`.
+
 ## Mathematical Foundations
 
 - **SVD and PCA:** Singular vectors, singular values, low-rank approximation, explained variance, and dimensionality reduction.
@@ -26,39 +30,43 @@ The repository focuses on runnable experiments, small exercises, and practical l
 
 ## SQL Analytics (DuckDB)
 
-- **SQL over DataFrames:** Querying Pandas DataFrames directly with DuckDB without creating database files.
+- **SQL over DataFrames:** Querying pandas DataFrames directly with DuckDB without creating database files.
 - **Aggregation:** Customer-level analysis using `GROUP BY`, `SUM`, and `AVG`.
 - **Window Functions:** Ranking and sequential analysis with `ROW_NUMBER`, `RANK`, `DENSE_RANK`, `LAG`, and `LEAD`.
 - **Window Frames:** Running totals and moving averages with `ROWS BETWEEN`.
 - **Analytical Filtering:** Filtering window-function results with `QUALIFY` and common table expressions.
 - **Relational Operations:** Joining sales and customer data with SQL joins.
-- **Time-Series Aggregation:** Monthly sales analysis using `DATE_TRUNC`, compared with Pandas `resample`.
+- **Time-Series Aggregation:** Monthly sales analysis using `DATE_TRUNC`, compared with pandas `resample`.
 
 ## Notebooks
 
-- [`s2_svd_pca.ipynb`](notebooks/s2_svd_pca.ipynb) — SVD, low-rank approximation, and PCA
-- [`S5_NumPy_Examples.ipynb`](notebooks/S5_NumPy_Examples.ipynb) — NumPy fundamentals with runnable examples
-- [`100_Numpy_exercises.ipynb`](notebooks/100_Numpy_exercises.ipynb) — Solutions to numpy-100 exercises 1–60
-- [`S6_NumPy_Broadcasting_Axis_Linalg.ipynb`](notebooks/S6_NumPy_Broadcasting_Axis_Linalg.ipynb) — Broadcasting, axis-based reduction, and linear algebra operations
-- [`S7_Pandas_Fundamentals_and_Exercises.ipynb`](notebooks/S7_Pandas_Fundamentals_and_Exercises.ipynb) — pandas fundamentals with a self-built dataset
-- [`S8_Pandas_Advanced_and_Exercises.ipynb`](notebooks/S8_Pandas_Advanced_and_Exercises.ipynb) — Merge/join, string cleaning, dates, missing values, MultiIndex, and categorical dtype
-- [`100-pandas-puzzles.ipynb`](notebooks/100-pandas-puzzles.ipynb) — Targeted practice from 100-pandas-puzzles
-- [`S9_SQL.ipynb`](notebooks/S9_SQL.ipynb) — DuckDB aggregation, window functions, joins, and monthly sales analysis
+All located under `notebooks/prep/`:
+
+- [`s2_svd_pca.ipynb`](notebooks/prep/s2_svd_pca.ipynb) — SVD, low-rank approximation, and PCA
+- [`S5_NumPy_Examples.ipynb`](notebooks/prep/S5_NumPy_Examples.ipynb) — NumPy fundamentals with runnable examples
+- [`100_Numpy_exercises.ipynb`](notebooks/prep/100_Numpy_exercises.ipynb) — Solutions to numpy-100 exercises 1–60
+- [`S6_NumPy_Broadcasting_Axis_Linalg.ipynb`](notebooks/prep/S6_NumPy_Broadcasting_Axis_Linalg.ipynb) — Broadcasting, axis-based reduction, and linear algebra operations
+- [`S7_Pandas_Fundamentals_and_Exercises.ipynb`](notebooks/prep/S7_Pandas_Fundamentals_and_Exercises.ipynb) — pandas fundamentals with a self-built dataset
+- [`S8_Pandas_Advanced_and_Exercises.ipynb`](notebooks/prep/S8_Pandas_Advanced_and_Exercises.ipynb) — Merge/join, string cleaning, dates, missing values, MultiIndex, and categorical dtype
+- [`100-pandas-puzzles.ipynb`](notebooks/prep/100-pandas-puzzles.ipynb) — Targeted practice from 100-pandas-puzzles
+- [`S9_SQL.ipynb`](notebooks/prep/S9_SQL.ipynb) — DuckDB aggregation, window functions, joins, and monthly sales analysis
 
 ## Repository Structure
 
-```text
+```
 ml-learning/
 ├── notebooks/
-│   ├── 100_Numpy_exercises.ipynb
-│   ├── 100-pandas-puzzles.ipynb
-│   ├── s2_svd_pca.ipynb
-│   ├── S5_NumPy_Examples.ipynb
-│   ├── S6_NumPy_Broadcasting_Axis_Linalg.ipynb
-│   ├── S7_Pandas_Fundamentals_and_Exercises.ipynb
-│   ├── S8_Pandas_Advanced_and_Exercises.ipynb
-│   └── S9_SQL.ipynb
+│   └── prep/
+│       ├── 100_Numpy_exercises.ipynb
+│       ├── 100-pandas-puzzles.ipynb
+│       ├── s2_svd_pca.ipynb
+│       ├── S5_NumPy_Examples.ipynb
+│       ├── S6_NumPy_Broadcasting_Axis_Linalg.ipynb
+│       ├── S7_Pandas_Fundamentals_and_Exercises.ipynb
+│       ├── S8_Pandas_Advanced_and_Exercises.ipynb
+│       └── S9_SQL.ipynb
 ├── data/
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
+```
