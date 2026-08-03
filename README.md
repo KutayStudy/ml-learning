@@ -8,6 +8,14 @@ The repository focuses on runnable experiments, small exercises, and practical l
 
 Foundational phase before the 6-month roadmap begins: environment and repo setup, SVD/PCA, MLE and MAP (worked by hand on paper), NumPy (fundamentals through broadcasting and linear algebra), pandas (fundamentals through merging, cleaning, and MultiIndex), and SQL analytics with DuckDB. All exercise and practice notebooks live under `notebooks/prep/`.
 
+## Month 1 — Flagship Project (in progress)
+
+Started the real roadmap. Dataset: Duolingo's Learning Traces — the data behind their published half-life regression research. Target is `p_recall`, probability of recalling a word in a session. Sampled 2,500 users (all their sessions, not random rows) so I can group-split by user later — 16,382 rows total.
+
+Data dictionary turned up something important: `p_recall` is literally `session_correct / session_seen`. Can't use those two as features or the model just reads off the answer. Target's also skewed hard toward 1.0, only 29 distinct values despite being a float.
+
+Added `history_accuracy` and a log-transformed `lag_days` (skewed, used `log1p` for the zeros). First cleaning pass done too — fixed timestamps, made the low-cardinality columns categorical, checked for impossible values, stripped whitespace on the word columns.
+
 ## Mathematical Foundations
 
 - **SVD and PCA:** Singular vectors, singular values, low-rank approximation, explained variance, and dimensionality reduction.
@@ -40,7 +48,9 @@ Foundational phase before the 6-month roadmap begins: environment and repo setup
 
 ## Notebooks
 
-All located under `notebooks/prep/`:
+Prep exercises live under `notebooks/prep/`, flagship work under `notebooks/month1/`.
+
+Prep:
 
 - [`s2_svd_pca.ipynb`](notebooks/prep/s2_svd_pca.ipynb) — SVD, low-rank approximation, and PCA
 - [`S5_NumPy_Examples.ipynb`](notebooks/prep/S5_NumPy_Examples.ipynb) — NumPy fundamentals with runnable examples
@@ -51,20 +61,35 @@ All located under `notebooks/prep/`:
 - [`100-pandas-puzzles.ipynb`](notebooks/prep/100-pandas-puzzles.ipynb) — Targeted practice from 100-pandas-puzzles
 - [`S9_SQL.ipynb`](notebooks/prep/S9_SQL.ipynb) — DuckDB aggregation, window functions, joins, and monthly sales analysis
 
+Month 1 (flagship):
+
+- [`part2_dataset_selection.ipynb`](notebooks/month1/part2_dataset_selection.ipynb) — sampling and loading the flagship dataset
+- [`part3_data_dictionary.ipynb`](notebooks/month1/part3_data_dictionary.ipynb) — column types, missingness, cardinality, target analysis
+- [`part4_numpy_features.ipynb`](notebooks/month1/part4_numpy_features.ipynb) — engineered features (accuracy rate, log-transformed lag)
+- [`part5_cleaning_v1.ipynb`](notebooks/month1/part5_cleaning_v1.ipynb) — first cleaning pass (types, whitespace, validity checks)
+
 ## Repository Structure
 
 ```
 ml-learning/
 ├── notebooks/
-│   └── prep/
-│       ├── 100_Numpy_exercises.ipynb
-│       ├── 100-pandas-puzzles.ipynb
-│       ├── s2_svd_pca.ipynb
-│       ├── S5_NumPy_Examples.ipynb
-│       ├── S6_NumPy_Broadcasting_Axis_Linalg.ipynb
-│       ├── S7_Pandas_Fundamentals_and_Exercises.ipynb
-│       ├── S8_Pandas_Advanced_and_Exercises.ipynb
-│       └── S9_SQL.ipynb
+│   ├── prep/
+│   │   ├── 100_Numpy_exercises.ipynb
+│   │   ├── 100-pandas-puzzles.ipynb
+│   │   ├── s2_svd_pca.ipynb
+│   │   ├── S5_NumPy_Examples.ipynb
+│   │   ├── S6_NumPy_Broadcasting_Axis_Linalg.ipynb
+│   │   ├── S7_Pandas_Fundamentals_and_Exercises.ipynb
+│   │   ├── S8_Pandas_Advanced_and_Exercises.ipynb
+│   │   └── S9_SQL.ipynb
+│   └── month1/
+│       ├── part2_dataset_selection.ipynb
+│       ├── part3_data_dictionary.ipynb
+│       ├── part4_numpy_features.ipynb
+│       └── part5_cleaning_v1.ipynb
+├── notes/
+│   ├── data_dictionary.md
+│   └── problem_statement.md
 ├── data/
 ├── pyproject.toml
 ├── uv.lock
