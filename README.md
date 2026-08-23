@@ -1,5 +1,8 @@
 # ML Learning
 
+[![Tests](https://github.com/KutayStudy/ml-learning/actions/workflows/tests.yml/badge.svg)](https://github.com/KutayStudy/ml-learning/actions/workflows/tests.yml)
+
+
 A lightweight, notebook-first repository for learning the mathematical and practical foundations of machine learning.
 
 The repository focuses on runnable experiments, small exercises, and practical learning artifacts rather than extensive standalone notes.
