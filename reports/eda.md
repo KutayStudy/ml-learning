@@ -40,20 +40,24 @@ Three things I checked for specifically:
 
 Goal is predicting p_recall for a user the model's never seen, not a known user's next session. That's the decision everything else follows from. Went with GroupKFold on `user_id`, no time component. Confirmed on the real data: zero overlapping users across all 5 folds.
 
-15% of users held out as a final test set (2,257 rows, ~338 users), untouched until real evaluation. The rest, 14,125 rows, ~2,162 users, is the CV pool.
+15% of users held out as a final test set (375 users, 1,944 rows), untouched until real evaluation. The rest, 2,125 users and 14,438 rows, is the CV pool.
+
+The split is written to `data/split_users.csv` and every later step loads it from there. It used to be re-derived inline in each notebook from `df["user_id"].unique()`, which returns users in row order — so once the SQL join in part 14 reordered the rows, the same seed silently produced a different hold-out set (only 70 of 375 users carried over). Users are now sorted before shuffling, and the file is the single source of truth, so the split no longer depends on which dataset version a notebook happens to read.
 
 ## Baseline and metric
 
-On the CV pool: mean baseline gets MAE 0.182, RMSE 0.279, R² 0.0 (which makes sense, R²'s zero point *is* the mean baseline by definition). Median baseline gets MAE 0.109, RMSE 0.300, R² -0.153 wins on MAE because p_recall's median is exactly 1.0 and matches over half the rows outright, but loses on RMSE since it's not built to minimize squared error the way the mean is.
+On the CV pool: mean baseline gets MAE 0.177, RMSE 0.276, R² 0.0 (which makes sense, R²'s zero point *is* the mean baseline by definition). Median baseline gets MAE 0.106, RMSE 0.295, R² -0.147 wins on MAE because p_recall's median is exactly 1.0 and matches over half the rows outright, but loses on RMSE since it's not built to minimize squared error the way the mean is.
 
 Going with RMSE as the main metric. It punishes big misses a lot harder than small ones, and that fits how this would actually get used - predicting way too high (model thinks they'll remember when they're about to forget) is a real failure, not a rounding error.
 
-Baseline to beat: RMSE 0.279.
+Baseline to beat: RMSE 0.276.
 
 One thing I'm parking for later: RMSE and MAE both treat over and under-prediction the same way but the real cost here probably isn't symmetric. Might be worth an asymmetric loss down the line.
 
 ## First model
 
-Fit a default `RandomForestRegressor()`, zero tuning, on `lag_days`, `history_seen`, `history_correct`, `history_accuracy`, `lag_days_log`. RMSE came out to 0.157 — clears both dummy baselines by a lot, so there's real signal in these features.
+Fit a default `RandomForestRegressor(random_state=42)`, zero tuning, on `lag_days`, `history_seen`, `history_correct`, `history_accuracy`, `lag_days_log`. RMSE came out to 0.155 — clears both dummy baselines by a lot, so there's real signal in these features.
 
-Caveat: this is in-sample, trained and evaluated on the same data, not a real holdout. An unconstrained forest can memorize a chunk of the training set, so 0.157 is probably optimistic. Real CV evaluation is Month 2's job.
+Caveat: this is in-sample, trained and evaluated on the same data, not a real holdout. An unconstrained forest can memorize a chunk of the training set, so 0.155 is probably optimistic. Real CV evaluation is Month 2's job.
+
+All the numbers in this section were recomputed on the saved split. Earlier drafts of this report quoted 0.279 / 0.300 / 0.157, measured on the pre-fix split.

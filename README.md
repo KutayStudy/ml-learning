@@ -21,9 +21,17 @@ Added `history_accuracy` and a log-transformed `lag_days` (skewed, used `log1p` 
 
 `grammar_tags` is ~10% missing, but it's MAR — it tracks part of speech, since non-inflecting word classes just don't have tags — so it gets a `no_gram` sentinel instead of an imputed value. EDA on the numeric columns showed `history_seen`/`history_correct` extremely right-skewed (a few users drill one word hundreds of times), `lag_days` moderately skewed, and `p_recall` clumped so hard at 1.0 that modified z-score divides by zero — IQR is the only outlier method that holds up. Feature–target correlations are all weak (|r| < 0.12), so whatever signal exists is in combinations, not single columns.
 
-Ran a leakage audit: `p_recall` is a direct function of `session_correct`/`session_seen` (permanently excluded), `user_id` repeats ~6.5×/user so the split has to be `GroupKFold` on user, and a temporal check on repeated (user, lexeme) sessions confirmed `history_*` only ever increases. Held out 15% of users as an untouched final test set, kept the rest as a CV pool. Baselines there: mean gets RMSE 0.279, median gets MAE 0.109 (it matches the >50% of rows sitting exactly at 1.0). Chose RMSE as the primary metric — overpredicting recall is the failure that matters. A default `RandomForestRegressor` scored RMSE 0.157 in-sample, enough to confirm real signal; proper CV evaluation is Month 2.
+Ran a leakage audit: `p_recall` is a direct function of `session_correct`/`session_seen` (permanently excluded), `user_id` repeats ~6.5×/user so the split has to be `GroupKFold` on user, and a temporal check on repeated (user, lexeme) sessions confirmed `history_*` only ever increases. Held out 15% of users (375 users, 1,944 rows) as an untouched final test set, kept the rest (2,125 users, 14,438 rows) as a CV pool. Baselines there: mean gets RMSE 0.276, median gets MAE 0.106 (it matches the >50% of rows sitting exactly at 1.0). Chose RMSE as the primary metric — overpredicting recall is the failure that matters. A default `RandomForestRegressor` scored RMSE 0.155 in-sample, enough to confirm real signal; proper CV evaluation is Month 2.
 
-Added a `difficulty_rank_in_language` feature through a SQL `LEFT JOIN` on `lexeme_id` (window functions and joins were the new SQL here). Wired the cleaning and fill-missing steps into a `typer` CLI (`src/data/build.py`) with a `pandera` schema that fails loud on out-of-range values, covered those functions with `pytest`, and added a GitHub Actions workflow that runs the suite on every push. Findings so far are collected in [`reports/eda.md`](reports/eda.md).
+The split lives in `data/split_users.csv` and is the one data artifact kept under version control. It was originally re-derived inline in each notebook by shuffling `df["user_id"].unique()` — which returns users in *row order*, so the SQL join below reordered the rows and the same seed quietly produced a different hold-out set (70 of 375 users in common). Users are now sorted before shuffling and the split is written once in part 11; because it's keyed on `user_id`, it applies unchanged to every dataset version.
+
+Added a `difficulty_rank_in_language` feature through a SQL `LEFT JOIN` on `lexeme_id` (window functions and joins were the new SQL here). All of it — cleaning, the missing-value fill, both engineered features, and the difficulty join — is wired into a `typer` CLI (`src/data/build.py`) that turns the sampled dataset into the model-ready table in one command, with a `pandera` schema that fails loud on out-of-range values:
+
+```bash
+python -m src.data.build data/duolingo_flagship.csv data/duolingo_flagship_v5.csv
+```
+
+The one step deliberately left outside the pipeline is part 2's user sampling: it used an unseeded `ORDER BY random()`, so re-running it would pick a different 2,500 users and invalidate the saved split. That sample is frozen as the pipeline's input instead. The pipeline functions are covered by `pytest`, and a GitHub Actions workflow runs the suite on every push. Findings so far are collected in [`reports/eda.md`](reports/eda.md).
 
 Also started Andrew Ng's supervised-learning material and rebuilt Week 1 from scratch — the linear model, squared-error cost, and gradient descent — plus a separate note deriving why squared error follows from a Gaussian-noise assumption through maximum likelihood. Picked MSE as the first modeling objective for the flagship, with a plan to inspect the residual distribution before committing to it.
 
@@ -145,6 +153,7 @@ ml-learning/
 │   └── workflows/
 │       └── tests.yml
 ├── data/
+│   └── split_users.csv        # the only data file kept in git
 ├── pyproject.toml
 ├── uv.lock
 └── README.md

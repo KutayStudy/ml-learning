@@ -6,3 +6,5 @@ __pycache__/
 
 data/*
 !data/.gitkeep
+# The split defines every evaluation number in the repo — keep it versioned.
+!data/split_users.csv
