@@ -11,7 +11,7 @@ The repository focuses on runnable experiments, small exercises, and practical l
 
 Foundational phase before the 6-month roadmap begins: environment and repo setup, SVD/PCA, MLE and MAP (worked by hand on paper), NumPy (fundamentals through broadcasting and linear algebra), pandas (fundamentals through merging, cleaning, and MultiIndex), and SQL analytics with DuckDB. All exercise and practice notebooks live under `notebooks/prep/`.
 
-## Month 1 — Flagship Project (in progress)
+## Month 1 — Flagship Data Layer
 
 Started the real roadmap. Dataset: Duolingo's Learning Traces — the data behind their published half-life regression research. Target is `p_recall`, probability of recalling a word in a session. Sampled 2,500 users (all their sessions, not random rows) so I can group-split by user later — 16,382 rows total.
 
@@ -21,7 +21,7 @@ Added `history_accuracy` and a log-transformed `lag_days` (skewed, used `log1p` 
 
 `grammar_tags` is ~10% missing, but it's MAR — it tracks part of speech, since non-inflecting word classes just don't have tags — so it gets a `no_gram` sentinel instead of an imputed value. EDA on the numeric columns showed `history_seen`/`history_correct` extremely right-skewed (a few users drill one word hundreds of times), `lag_days` moderately skewed, and `p_recall` clumped so hard at 1.0 that modified z-score divides by zero — IQR is the only outlier method that holds up. Feature–target correlations are all weak (|r| < 0.12), so whatever signal exists is in combinations, not single columns.
 
-Ran a leakage audit: `p_recall` is a direct function of `session_correct`/`session_seen` (permanently excluded), `user_id` repeats ~6.5×/user so the split has to be `GroupKFold` on user, and a temporal check on repeated (user, lexeme) sessions confirmed `history_*` only ever increases. Held out 15% of users (375 users, 1,944 rows) as an untouched final test set, kept the rest (2,125 users, 14,438 rows) as a CV pool. Baselines there: mean gets RMSE 0.276, median gets MAE 0.106 (it matches the >50% of rows sitting exactly at 1.0). Chose RMSE as the primary metric — overpredicting recall is the failure that matters. A default `RandomForestRegressor` scored RMSE 0.155 in-sample, enough to confirm real signal; proper CV evaluation is Month 2.
+Ran a leakage audit: `p_recall` is a direct function of `session_correct`/`session_seen` (permanently excluded), `user_id` repeats ~6.5×/user so the split has to be `GroupKFold` on user, and a temporal check on repeated (user, lexeme) sessions confirmed `history_*` only ever increases. Held out 15% of users (375 users, 1,944 rows) as an untouched final test set, kept the rest (2,125 users, 14,438 rows) as a CV pool. Baselines there: mean gets RMSE 0.276, median gets MAE 0.106 (it matches the >50% of rows sitting exactly at 1.0). Chose RMSE as the primary metric — overpredicting recall is the failure that matters. A default `RandomForestRegressor` scored RMSE 0.155 in-sample, enough to confirm real signal; proper CV evaluation came in Month 2.
 
 The split lives in `data/split_users.csv` and is the one data artifact kept under version control. It was originally re-derived inline in each notebook by shuffling `df["user_id"].unique()` — which returns users in *row order*, so the SQL join below reordered the rows and the same seed quietly produced a different hold-out set (70 of 375 users in common). Users are now sorted before shuffling and the split is written once in part 11; because it's keyed on `user_id`, it applies unchanged to every dataset version.
 
@@ -35,6 +35,30 @@ The one step deliberately left outside the pipeline is part 2's user sampling: i
 
 Also started Andrew Ng's supervised-learning material and rebuilt Week 1 from scratch — the linear model, squared-error cost, and gradient descent — plus a separate note deriving why squared error follows from a Gaussian-noise assumption through maximum likelihood. Picked MSE as the first modeling objective for the flagship, with a plan to inspect the residual distribution before committing to it.
 
+## Month 2 — Evaluation and Regularization
+
+Month 1's 0.155 was an in-sample number and didn't mean anything. This month replaced it with a score measured on users the model had never seen.
+
+First the model itself: generalized the from-scratch gradient descent to matrix form, $\nabla_w J = \frac{1}{m}X^\top(Xw + b - y)$, and checked it against `LinearRegression` — 0.273402 against 0.273374, close enough to trust the implementation. The interesting part was the conditioning. `history_seen` and `history_correct` correlate at 0.999, which leaves the smallest Hessian eigenvalue at 0.001 against a largest of 2.04, a condition number near 1977. Cost converges long before the coefficients do.
+
+Then the evaluation work, which is the real content of the month. `GroupKFold` on `user_id`, with `StandardScaler` inside a `Pipeline` so scaling statistics come from each training fold only. Fold RMSEs ranged from 0.262 to 0.285 — a spread of 0.023, more than ten times the gap between the best model and the baseline. A single split would have been worthless here.
+
+All four models under the same protocol:
+
+| Model | CV RMSE |
+|---|---|
+| Mean baseline | 0.275398 ± 0.010158 |
+| LinearRegression | 0.273699 ± 0.009834 |
+| Tuned Ridge, `alpha = 30` | 0.273468 ± 0.010290 |
+| Tuned Lasso, `alpha = 0.0001` | 0.273533 ± 0.010116 |
+
+The spread between folds is 0.010, which makes those gaps look like rounding — but all four models were scored on the same folds, so the comparison worth making is paired. Done that way, linear regression beats the mean baseline on every one of the five folds, mean difference -0.0017 ± 0.0006. Small, consistent, real. The Ridge and Lasso margins can't be checked the same way because only their summary scores were kept, which is a habit to fix. Regularization didn't help either, and the group-aware learning curve says why: at full training size the train/validation gap is 0.00037, so there is no variance for a penalty to remove. The Lasso sweep made the point better than any explanation — at `alpha = 0.1` all five coefficients go to zero and the score lands on 0.275398, exactly the mean baseline. A fully sparse linear model *is* a mean baseline.
+
+Also finished Andrew Ng Course 1: logistic regression, decision boundaries, binary cross-entropy, and the `Bernoulli → MLE → cross-entropy` derivation that mirrors Month 1's `Gaussian → MLE → squared error`. MAP is the bridge to regularization — a Gaussian weight prior gives L2 and Ridge, a Laplace prior gives L1 and Lasso.
+
+The holdout (375 users, 1,944 rows) has still not been touched. Full writeup in [`reports/month2_review.md`](reports/month2_review.md).
+
+
 ## Mathematical Foundations
 
 - **SVD and PCA:** Singular vectors, singular values, low-rank approximation, explained variance, and dimensionality reduction.
@@ -47,6 +71,12 @@ Also started Andrew Ng's supervised-learning material and rebuilt Week 1 from sc
 - **Squared-Error Cost:** Residuals aggregated into a single scalar $J(w,b)$, framed as the objective to minimize, and the convexity of the cost surface for this problem.
 - **Gradient Descent:** Partial derivatives of the cost, simultaneous update of $w$ and $b$, the learning rate $\alpha$ as step size, and recognizing convergence versus divergence — implemented from scratch on a toy dataset.
 - **MLE to Squared Loss:** Assuming independent, zero-mean, constant-variance Gaussian residual noise makes maximum likelihood estimation for linear regression equivalent to minimizing squared error; the loss comes from a modeling assumption, while gradient descent is only the optimizer.
+- **Multi-Feature Regression:** The vectorized model $f(x) = w^\top x + b$, the matrix-form gradient, feature scaling, and how collinearity degrades the conditioning of the optimization problem.
+- **Optimizers:** Batch, stochastic and mini-batch gradient descent; momentum as accumulated direction; Adam as momentum plus per-parameter adaptive scaling. Optimizer choice is an engineering decision, not a ranking.
+- **Logistic Regression and Cross-Entropy:** The sigmoid, decision boundaries, binary cross-entropy, and the Bernoulli-MLE derivation that produces it — the classification counterpart to Gaussian MLE and squared error.
+- **Regularization in Practice:** Ridge and Lasso, weight decay, and the MAP reading in which a Gaussian weight prior yields L2 and a Laplace prior yields L1.
+- **Group-Aware Evaluation:** `GroupKFold` on a repeated-observation key, preprocessing fit inside each fold, hyperparameters chosen on cross-validation rather than on the holdout, and results reported as mean ± fold standard deviation.
+- **Bias and Variance:** Diagnosing underfitting and overfitting from a learning curve built on the project's own data, rather than from a textbook diagram.
 
 ## Numerical Computing
 
@@ -105,6 +135,20 @@ Month 1 (flagship):
 - [`part21_linear_regression_foundations.ipynb`](notebooks/month1/part21_linear_regression_foundations.ipynb) — linear model, squared-error cost, and from-scratch gradient descent
 - [`part22_mle_to_squared_loss.md`](notebooks/month1/part22_mle_to_squared_loss.md) — deriving the squared-error loss from Gaussian-noise MLE
 
+Month 2 (modeling and evaluation):
+
+- [`part1_multiple_linear_regression_with_my_exercise.ipynb`](notebooks/month2/part1_multiple_linear_regression_with_my_exercise.ipynb) — multiple features, vectorization, scaling, polynomial regression
+- [`part2_multifeature_gd.ipynb`](notebooks/month2/part2_multifeature_gd.ipynb) — from-scratch matrix-form gradient descent, checked against sklearn
+- [`part3_convexity_optimizerMechanics.ipynb`](notebooks/month2/part3_convexity_optimizerMechanics.ipynb) — convexity, batch/SGD/mini-batch, momentum, Adam
+- [`part4_logistic_regression.ipynb`](notebooks/month2/part4_logistic_regression.ipynb) — sigmoid, decision boundaries, why linear regression classifies badly
+- [`part5_logistic_cost_gd.ipynb`](notebooks/month2/part5_logistic_cost_gd.ipynb) — binary cross-entropy, logistic gradient descent, Bernoulli MLE
+- [`part6_regularization.ipynb`](notebooks/month2/part6_regularization.ipynb) — regularized cost and gradient, weight decay, the effect of lambda
+- [`part7_group_aware_validation.ipynb`](notebooks/month2/part7_group_aware_validation.ipynb) — first evaluation on genuinely unseen users
+- [`part8_9_group_aware_cross_validation.ipynb`](notebooks/month2/part8_9_group_aware_cross_validation.ipynb) — 5-fold `GroupKFold` and the first real CV mean ± std
+- [`part10_ridge_lasso_map.ipynb`](notebooks/month2/part10_ridge_lasso_map.ipynb) — Ridge and Lasso, coefficient shrinkage, the MAP interpretation
+- [`part11_bias_variance_learning_curve.ipynb`](notebooks/month2/part11_bias_variance_learning_curve.ipynb) — group-aware learning curve and bias/variance diagnosis
+- [`part12_group_aware_regularization_tuning.ipynb`](notebooks/month2/part12_group_aware_regularization_tuning.ipynb) — `GridSearchCV` over `GroupKFold`, with the holdout left closed
+
 Supporting flagship artifacts: [`notes/`](notes/) (problem statement, data dictionary, missing-value plan), [`reports/eda.md`](reports/eda.md), the [`src/data/build.py`](src/data/build.py) CLI pipeline, and [`tests/`](tests/) with the GitHub Actions workflow in [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 
 ## Repository Structure
@@ -121,28 +165,43 @@ ml-learning/
 │   │   ├── S7_Pandas_Fundamentals_and_Exercises.ipynb
 │   │   ├── S8_Pandas_Advanced_and_Exercises.ipynb
 │   │   └── S9_SQL.ipynb
-│   └── month1/
-│       ├── part2_dataset_selection.ipynb
-│       ├── part3_data_dictionary.ipynb
-│       ├── part4_numpy_features.ipynb
-│       ├── part5_cleaning_v1.ipynb
-│       ├── part6_missing_data.ipynb
-│       ├── part8_eda_distributions.ipynb
-│       ├── part9_eda_correlation.ipynb
-│       ├── part10_leakage.ipynb
-│       ├── part11_split.ipynb
-│       ├── part12_baseline.ipynb
-│       ├── part13_firstModel.ipynb
-│       ├── part14_sqlFeature.ipynb
-│       ├── part16_pipeline&SchemaValidation.ipynb
-│       ├── part21_linear_regression_foundations.ipynb
-│       └── part22_mle_to_squared_loss.md
+│   ├── month1/
+│   │   ├── part2_dataset_selection.ipynb
+│   │   ├── part3_data_dictionary.ipynb
+│   │   ├── part4_numpy_features.ipynb
+│   │   ├── part5_cleaning_v1.ipynb
+│   │   ├── part6_missing_data.ipynb
+│   │   ├── part8_eda_distributions.ipynb
+│   │   ├── part9_eda_correlation.ipynb
+│   │   ├── part10_leakage.ipynb
+│   │   ├── part11_split.ipynb
+│   │   ├── part12_baseline.ipynb
+│   │   ├── part13_firstModel.ipynb
+│   │   ├── part14_sqlFeature.ipynb
+│   │   ├── part16_pipeline&SchemaValidation.ipynb
+│   │   ├── part21_linear_regression_foundations.ipynb
+│   │   └── part22_mle_to_squared_loss.md
+│   └── month2/
+│       ├── part1_multiple_linear_regression_with_my_exercise.ipynb
+│       ├── part2_multifeature_gd.ipynb
+│       ├── part3_convexity_optimizerMechanics.ipynb
+│       ├── part4_logistic_regression.ipynb
+│       ├── part5_logistic_cost_gd.ipynb
+│       ├── part6_regularization.ipynb
+│       ├── part7_group_aware_validation.ipynb
+│       ├── part8_9_group_aware_cross_validation.ipynb
+│       ├── part10_ridge_lasso_map.ipynb
+│       ├── part11_bias_variance_learning_curve.ipynb
+│       └── part12_group_aware_regularization_tuning.ipynb
 ├── notes/
 │   ├── data_dictionary.md
+│   ├── metric_rationale.md
 │   ├── missing_value_plan.md
+│   ├── optimizer_intuition.md
 │   └── problem_statement.md
 ├── reports/
 │   ├── eda.md
+│   ├── month2_review.md
 │   └── figures/
 ├── src/
 │   └── data/
