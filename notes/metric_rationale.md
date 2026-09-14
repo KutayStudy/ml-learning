@@ -72,3 +72,21 @@ Alpha was selected on the CV pool only. The holdout was not touched at any point
 Using the holdout score to choose a hyperparameter would turn the holdout into a tuning signal, and the final evaluation would no longer be independent.
 
 Parameters (`w`, `b`) are learned from the training data. Hyperparameters (`alpha`) are chosen outside training, using cross-validation.
+
+## Month 3 — Evaluation Diagnostics
+
+Andrew's train/CV/test framework maps directly to the flagship project, but the user-level structure requires group-aware evaluation. Random row-level splitting could place the same user in both training and validation data, giving the model information about users it is later asked to predict. Therefore, validation uses `GroupKFold` with `user_id`.
+
+Bias and variance should be diagnosed relative to different references:
+
+- High bias: training error is high relative to the baseline level of performance.
+- High variance: validation error is substantially worse than training error.
+- More data generally helps high variance more than high bias.
+- Stronger models, better features, or less regularization can help high bias.
+- More regularization, simpler models, or more data can help high variance.
+
+The tuned Ridge model reaches roughly `0.2735` CV RMSE, while the estimated noise floor is around `0.264–0.267`. This suggests that the remaining achievable improvement may be relatively small, so model performance should not be judged from RMSE alone without considering the problem's irreducible error.
+
+Learning curves provide another diagnostic by showing how training and validation errors change as the amount of training data increases.
+
+Finally, reporting `mean ± fold std` is preferable to reporting a single CV split because it shows both average performance and sensitivity to the chosen folds. Fold standard deviation is not a confidence interval and should not be interpreted as uncertainty of the CV mean.
