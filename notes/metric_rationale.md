@@ -90,3 +90,19 @@ The tuned Ridge model reaches roughly `0.2735` CV RMSE, while the estimated nois
 Learning curves provide another diagnostic by showing how training and validation errors change as the amount of training data increases.
 
 Finally, reporting `mean ± fold std` is preferable to reporting a single CV split because it shows both average performance and sensitivity to the chosen folds. Fold standard deviation is not a confidence interval and should not be interpreted as uncertainty of the CV mean.
+
+## Month 3 — ML Development Process
+
+The ML development process should be iterative: choose a direction, train the model, diagnose its errors, and use those diagnostics to decide the next experiment.
+
+Error analysis helps prioritize work by identifying which error categories contribute most to overall performance loss.
+
+More data is not automatically useful. It is most valuable when diagnostics suggest variance or when additional data targets specific failure modes.
+
+Data augmentation can create useful training variation while preserving labels.
+
+Precision, recall, and F1 are important for imbalanced classification problems, but they are not appropriate primary metrics for the current `p_recall` regression task.
+
+The flagship project therefore continues to use group-aware CV and RMSE as its main evaluation framework.
+
+The next step is regression-oriented error analysis: inspect OOF residuals and determine where the Ridge model makes its largest errors.
